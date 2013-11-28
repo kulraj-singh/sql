@@ -1,0 +1,84 @@
+Q1) select all articles whose author is user3.
+
+mysql> select articles.title from articles, users where articles.user_id = users.id and users.name = "user3";
++----------+
+| title    |
++----------+
+| article6 |
++----------+
+1 row in set (0.02 sec)
+
+
+Q2) For all the articles being selected above, select all the articles and also the comments associated with those articles in a single query
+
+mysql> select articles.title as article_by_user3, comments.statement from articles, users, comments where articles.user_id = users.id and comments.article_id = articles.id and users.name = "user3";
++------------------+-------------------+
+| article_by_user3 | statement         |
++------------------+-------------------+
+| article6         | this is good      |
+| article6         | this is very good |
++------------------+-------------------+
+2 rows in set (0.00 sec)
+
+
+
+Q3) Write a query to select all articles which do not have any comments
+
+mysql> select articles.title as "articles without comments" from articles left join comments on articles.id = comments.article_id where comments.id is null;
++---------------------------+
+| articles without comments |
++---------------------------+
+| article5                  |
+| article7                  |
+| article8                  |
++---------------------------+
+3 rows in set (0.00 sec)
+
+
+
+Q4) Write a query to select article which has maximum comments
+
+mysql> select comments_per_article.title as "article(s) with maximum comments" from (select count(*) as count,articles.title as title from articles, comments where articles.id = comments.article_id group by articles.title) as comments_per_article, (select count(*) as count,articles.title as title from articles, comments where articles.id = comments.article_id group by articles.title order by count desc limit 1) as max_comments where max_comments.count = comments_per_article.count;
++----------------------------------+
+| article(s) with maximum comments |
++----------------------------------+
+| article1                         |
++----------------------------------+
+1 row in set (0.00 sec)
+
+
+
+
+
+Q5) Write a query to select article which does not have more than one comment by the same user ( do this using left join and also do it using group by )
+
+1) using group by
+
+mysql> select title from articles where articles.id not in (select comments.article_id from users, comments where users.id = comments.user_id group by comments.article_id, comments.user_id having count(*) > 1);
++----------+
+| title    |
++----------+
+| article4 |
+| article5 |
+| article6 |
+| article7 |
+| article8 |
++----------+
+5 rows in set (0.02 sec)
+
+
+
+
+2) using left join
+
+mysql> select title from articles left join (select comments.article_id from users, comments where users.id = comments.user_id group by comments.article_id, comments.user_id having count(*) > 1) as a on articles.id = a.article_id where a.article_id is null;
++----------+
+| title    |
++----------+
+| article4 |
+| article5 |
+| article6 |
+| article7 |
+| article8 |
++----------+
+5 rows in set (0.01 sec)
